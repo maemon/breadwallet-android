@@ -5,7 +5,14 @@ import android.content.Context;
 import android.os.AsyncTask;
 import android.os.Handler;
 import android.util.Log;
+import android.widget.Toast;
 
+import com.android.volley.Request;
+import com.android.volley.RequestQueue;
+import com.android.volley.Response;
+import com.android.volley.VolleyError;
+import com.android.volley.toolbox.StringRequest;
+import com.android.volley.toolbox.Volley;
 import com.breadwallet.BreadApp;
 import com.breadwallet.presenter.entities.CurrencyEntity;
 import com.breadwallet.tools.sqlite.CurrencyDataSource;
@@ -22,6 +29,8 @@ import org.json.JSONObject;
 
 import java.io.BufferedReader;
 import java.io.InputStreamReader;
+import java.math.BigDecimal;
+import java.math.RoundingMode;
 import java.net.HttpURLConnection;
 import java.net.URL;
 import java.nio.charset.Charset;
@@ -68,6 +77,7 @@ public class CurrencyFetchManager {
     private Timer timer;
 
     private TimerTask timerTask;
+   static String idk = "";
 
     private Handler handler;
 
@@ -92,12 +102,32 @@ public class CurrencyFetchManager {
                 int length = arr.length();
                 for (int i = 1; i < length; i++) {
                     CurrencyEntity tmp = new CurrencyEntity();
+
                     try {
+
+
+
+
                         JSONObject tmpObj = (JSONObject) arr.get(i);
                         tmp.name = tmpObj.getString("name");
                         tmp.code = tmpObj.getString("code");
+
+
                         tmp.rate = (float) tmpObj.getDouble("rate");
+                        float newRatio = tmp.rate * getBTCRatio(context);
+
+                        BigDecimal bd = new BigDecimal(newRatio);
+                        BigDecimal res = bd.setScale(2, RoundingMode.HALF_UP);
+                        newRatio = res.floatValue();
+                        Log.e("mush", Float.toString(newRatio));
+
+                        tmp.rate = newRatio;
+                        tmpObj.put("rate", tmp.rate);
+
+
                         String selectedISO = BRSharedPrefs.getIso(context);
+                        String tst = Float.toString(tmp.rate);
+						Log.e("idc", tst);
 //                        Log.e(TAG,"selectedISO: " + selectedISO);
                         if (tmp.code.equalsIgnoreCase(selectedISO)) {
 //                            Log.e(TAG, "theIso : " + theIso);
@@ -180,15 +210,48 @@ public class CurrencyFetchManager {
             timer = null;
         }
     }
+    public static float getBTCRatio(Activity activity) {
+        String testString = callURL(activity, String.format("https://api.coinmarketcap.com/v1/ticker/bitcoin-cash/"));
+        String asdf="";
+	   JSONArray jsonArray = null;
+        try {
 
 
+
+
+
+            JSONArray numTick = new JSONArray(testString);
+            JSONObject numTickr = null;
+            numTickr = numTick.getJSONObject(0);
+            asdf = numTickr.getString("price_btc");
+
+        }catch (JSONException ignored) {
+        }
+        return Float.parseFloat(asdf);
+    }
+
+	
+	
+	
+	
+	
     public static JSONArray getJSonArray(Activity activity) {
         String jsonString = callURL(activity, String.format("https://%s/rates", BreadApp.HOST));
+		String testString = callURL(activity, String.format("https://api.coinmarketcap.com/v1/ticker/bitcoin-cash/"));
+;
+
         JSONArray jsonArray = null;
         if (jsonString == null) return null;
         try {
+            JSONArray numTick = new JSONArray(testString);
+            JSONObject numTickr = null;
+            numTickr = numTick.getJSONObject(0);
+            String asdf = numTickr.getString("price_btc");
+
+
             JSONObject obj = new JSONObject(jsonString);
             jsonArray = obj.getJSONArray("body");
+
 
         } catch (JSONException ignored) {
         }
@@ -204,19 +267,54 @@ public class CurrencyFetchManager {
             JSONObject obj = new JSONObject(jsonString);
 
             jsonArray = obj.getJSONArray("data");
-//            JSONObject headers = obj.getJSONObject("headers");
-//            String secureDate = headers.getString("Date");
-//            @SuppressWarnings("deprecation") long date = Date.parse(secureDate) / 1000;
 
-//            BRSharedPrefs.putSecureTime(activity, date);
         } catch (JSONException e) {
             e.printStackTrace();
         }
         return jsonArray;
     }
 
+    public static String convertAddress(Activity activity, String address) {
+        String concated = "http://api.unitwallet.co/translateAddy/?addy=" + address;
+            String jsonString = callURL(activity, concated);
+
+        String resultAddy = "";
+            if (jsonString == null) return null;
+            try {
+                JSONObject obj = new JSONObject(jsonString);
+                resultAddy = obj.getString("resultAddress");
+                Log.e("hiMom", resultAddy);
+
+            } catch (JSONException e) {
+                e.printStackTrace();
+            }
+            return resultAddy;
+        }
+
+
+
+
+
+        /*
     public static void updateFeePerKb(Activity activity) {
-        String jsonString = callURL(activity, "https://api.breadwallet.com/fee-per-kb");
+    //No APIs for BCH atm, hard coding until an API is built
+        long fee;
+        long economyFee;
+
+            fee = 10000;
+            economyFee = 7000;
+            if (fee != 0 && fee < BRConstants.MAX_FEE_PER_KB) {
+                BRSharedPrefs.putFeePerKb(activity, fee);
+                BRWalletManager.getInstance().setFeePerKb(fee, isEconomyFee);
+            }
+            if (economyFee != 0 && economyFee < BRConstants.MAX_FEE_PER_KB) {
+                BRSharedPrefs.putEconomyFeePerKb(activity, economyFee);
+            }
+
+    }*/
+
+    public static void updateFeePerKb(Activity activity) {
+        String jsonString = callURL(activity, "http://api.unitwallet.co/getFees");
         if (jsonString == null || jsonString.isEmpty()) {
             Log.e(TAG, "updateFeePerKb: failed to update fee, response string: " + jsonString);
             return;
@@ -234,14 +332,56 @@ public class CurrencyFetchManager {
             if (economyFee != 0 && economyFee < BRConstants.MAX_FEE_PER_KB) {
                 BRSharedPrefs.putEconomyFeePerKb(activity, economyFee);
             }
+            Log.e("asdfdsa", Float.toString(fee));
+            Log.e("asdfdsa", Float.toString(economyFee));
+
         } catch (JSONException e) {
             FirebaseCrash.report(e);
             e.printStackTrace();
         }
     }
 
-    private static String callURL(Context app, String myURL) {
+
+
+    public static String getAddressTranslatedOther(String myAddress) {
+
+        String response;
+        StringRequest stringRequest = new StringRequest(Request.Method.POST, "http://api.unitwallet.co/translateAddy/?addy=" + myAddress,
+                new Response.Listener<String>() {
+                    @Override
+                    public void onResponse(String response) {
+                        String jsonString = response;
+                        Log.e ("reply", response);
+
+                        if (jsonString == null) return;
+                        try {
+                            JSONObject obj = new JSONObject(jsonString);
+                            idk = obj.getString("resultAddress");
+
+                        } catch (JSONException e) {
+                            e.printStackTrace();
+                        }
+
+                    }
+                },
+                new Response.ErrorListener() {
+                    @Override
+                    public void onErrorResponse(VolleyError error) {
+                        Log.e ("reply", "error" + error);
+
+                    }
+                });
+        RequestQueue requestQueue = Volley.newRequestQueue(BreadApp.getBreadContext());
+
+        requestQueue.add(stringRequest);
+
+        response = idk;
+        return response;
+    }
+
+        private static String callURL(Context app, String myURL) {
 //        System.out.println("Requested URL_EA:" + myURL);
+        Log.e("requesteDUrl", myURL);
         StringBuilder sb = new StringBuilder();
         HttpURLConnection urlConn = null;
         InputStreamReader in = null;
@@ -250,16 +390,19 @@ public class CurrencyFetchManager {
             urlConn = (HttpURLConnection) url.openConnection();
 
 //            Log.e(TAG, "user agent: " + Utils.getAgentString(app, "android/HttpURLConnection"));
-            urlConn.setRequestProperty("User-agent", Utils.getAgentString(app, "android/HttpURLConnection"));
+          //  urlConn.setRequestProperty("User-agent", Utils.getAgentString(app, "android/HttpURLConnection"));
+            Log.e("btcUr", "Hi");
+
             urlConn.setReadTimeout(60 * 1000);
 
             String strDate = urlConn.getHeaderField("date");
+         //   if (strDate == null || app == null) {
 
-            if (strDate == null || app == null) {
+            if (strDate == null ) {
                 Log.e(TAG, "callURL: strDate == null!!!");
             } else {
                 @SuppressWarnings("deprecation") long date = Date.parse(strDate) / 1000;
-                BRSharedPrefs.putSecureTime(app, date);
+              //  BRSharedPrefs.putSecureTime(app, date);
                 Assert.assertTrue(date != 0);
             }
 

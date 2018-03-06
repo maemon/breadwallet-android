@@ -5,6 +5,7 @@ import android.content.Context;
 import android.content.SharedPreferences;
 import android.util.Log;
 
+import com.breadwallet.tools.crypto.CashAddr;
 import com.breadwallet.tools.util.BRConstants;
 
 import org.json.JSONArray;
@@ -110,14 +111,14 @@ public class BRSharedPrefs {
         editor.apply();
     }
 
-    public static String getReceiveAddress(Context context) {
+    public static CashAddr getReceiveAddress(Context context) {
         SharedPreferences prefs = context.getSharedPreferences(BRConstants.PREFS_NAME, Context.MODE_PRIVATE);
-        return prefs.getString(BRConstants.RECEIVE_ADDRESS, "");
+        return CashAddr.fromLegacy(prefs.getString(BRConstants.RECEIVE_ADDRESS, ""));
     }
 
-    public static void putReceiveAddress(Context ctx, String tmpAddr) {
+    public static void putReceiveAddress(Context ctx, String tmpLegacyAddr) {
         SharedPreferences.Editor editor = ctx.getSharedPreferences(BRConstants.PREFS_NAME, Context.MODE_PRIVATE).edit();
-        editor.putString(BRConstants.RECEIVE_ADDRESS, tmpAddr);
+        editor.putString(BRConstants.RECEIVE_ADDRESS, tmpLegacyAddr);
         editor.apply();
     }
 
@@ -146,6 +147,7 @@ public class BRSharedPrefs {
 
     public static long getFeePerKb(Context context) {
         SharedPreferences prefs = context.getSharedPreferences(BRConstants.PREFS_NAME, Context.MODE_PRIVATE);
+		Log.e("fpbk", Long.toString(prefs.getLong(BRConstants.FEE_KB_PREFS, 0)));
         return prefs.getLong(BRConstants.FEE_KB_PREFS, 0);
     }
 
@@ -338,7 +340,7 @@ public class BRSharedPrefs {
 
     public static int getCurrencyUnit(Context context) {
         SharedPreferences settingsToGet = context.getSharedPreferences(BRConstants.PREFS_NAME, 0);
-        return settingsToGet.getInt(BRConstants.CURRENT_UNIT, BRConstants.CURRENT_UNIT_BITS);
+        return settingsToGet.getInt(BRConstants.CURRENT_UNIT, BRConstants.CURRENT_UNIT_BITCOINS);
     }
 
     public static void putCurrencyUnit(Context context, int unit) {

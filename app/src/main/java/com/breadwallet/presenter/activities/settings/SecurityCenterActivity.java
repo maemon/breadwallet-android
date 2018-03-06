@@ -166,7 +166,7 @@ public class SecurityCenterActivity extends BRActivity {
                 && BRSharedPrefs.getUseFingerprint(SecurityCenterActivity.this)
                 ? R.drawable.ic_check_mark_blue
                 : R.drawable.ic_check_mark_grey;
-
+//Disabled due to issues with high value wallets and fingerprint reading
         if (Utils.isFingerprintAvailable(this)) {
             itemList.add(new BRSecurityCenterItem(getString(R.string.Fingerprint_Android), getString(R.string.SecurityCenter_touchIdDescription),
                     resId, new View.OnClickListener() {

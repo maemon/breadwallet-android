@@ -34,6 +34,8 @@ import com.breadwallet.presenter.activities.PinActivity;
 import com.breadwallet.presenter.activities.camera.ScanQRActivity;
 import com.breadwallet.presenter.customviews.BRDialogView;
 import com.breadwallet.presenter.entities.TxItem;
+import com.breadwallet.presenter.fragments.FragmentAbout;
+import com.breadwallet.presenter.fragments.FragmentDiscover;
 import com.breadwallet.presenter.fragments.FragmentMenu;
 import com.breadwallet.presenter.fragments.FragmentSignal;
 import com.breadwallet.presenter.fragments.FragmentReceive;
@@ -42,6 +44,7 @@ import com.breadwallet.presenter.fragments.FragmentSend;
 import com.breadwallet.presenter.fragments.FragmentSupport;
 import com.breadwallet.presenter.fragments.FragmentTransactionDetails;
 import com.breadwallet.presenter.interfaces.BROnSignalCompletion;
+import com.breadwallet.tools.crypto.CashAddr;
 import com.breadwallet.tools.manager.BRSharedPrefs;
 import com.breadwallet.tools.util.BRConstants;
 import com.breadwallet.tools.util.Utils;
@@ -186,6 +189,63 @@ public class BRAnimator {
 
     }
 
+
+
+    public static void showDiscoverFragment(Activity app, String articleId) {
+        if (app == null) {
+            Log.e(TAG, "showSupportFragment: app is null");
+            return;
+        }
+        FragmentDiscover fragmentSupport = (FragmentDiscover) app.getFragmentManager().findFragmentByTag(FragmentDiscover.class.getName());
+        if (fragmentSupport != null && fragmentSupport.isAdded()) {
+            app.getFragmentManager().popBackStack();
+            return;
+        }
+        try {
+            fragmentSupport = new FragmentDiscover();
+            if (articleId != null && !articleId.isEmpty()) {
+                Bundle bundle = new Bundle();
+                bundle.putString("articleId", articleId);
+                fragmentSupport.setArguments(bundle);
+            }
+            app.getFragmentManager().beginTransaction()
+                    .setCustomAnimations(0, 0, 0, R.animator.plain_300)
+                    .add(android.R.id.content, fragmentSupport, FragmentSend.class.getName())
+                    .addToBackStack(FragmentSend.class.getName()).commit();
+        } finally {
+
+        }
+
+    }
+
+    public static void showAboutFragment(Activity app, String articleId) {
+        if (app == null) {
+            Log.e(TAG, "showSupportFragment: app is null");
+            return;
+        }
+        FragmentAbout fragmentAbout = (FragmentAbout) app.getFragmentManager().findFragmentByTag(FragmentAbout.class.getName());
+        if (fragmentAbout != null && fragmentAbout.isAdded()) {
+            app.getFragmentManager().popBackStack();
+            return;
+        }
+        try {
+            fragmentAbout = new FragmentAbout();
+            if (articleId != null && !articleId.isEmpty()) {
+                Bundle bundle = new Bundle();
+                bundle.putString("articleId", articleId);
+                fragmentAbout.setArguments(bundle);
+            }
+            app.getFragmentManager().beginTransaction()
+                    .setCustomAnimations(0, 0, 0, R.animator.plain_300)
+                    .add(android.R.id.content, fragmentAbout, FragmentSend.class.getName())
+                    .addToBackStack(FragmentSend.class.getName()).commit();
+        } finally {
+
+        }
+
+    }
+
+
     public static void showTransactionPager(Activity app, List<TxItem> items, int position) {
         if (app == null) {
             Log.e(TAG, "showSendFragment: app is null");
@@ -264,12 +324,12 @@ public class BRAnimator {
         return itemLayoutTransition;
     }
 
-    public static void showRequestFragment(Activity app, String address) {
+    public static void showRequestFragment(Activity app, CashAddr address) {
         if (app == null) {
             Log.e(TAG, "showRequestFragment: app is null");
             return;
         }
-        if (Utils.isNullOrEmpty(address)) {
+        if (address == null) {
             Log.e(TAG, "showRequestFragment: address is empty: " + address);
             return;
         }
@@ -280,7 +340,7 @@ public class BRAnimator {
 
         fragmentRequestAmount = new FragmentRequestAmount();
         Bundle bundle = new Bundle();
-        bundle.putString("address", address);
+        bundle.putString("address", address.toString());
         fragmentRequestAmount.setArguments(bundle);
         app.getFragmentManager().beginTransaction()
                 .setCustomAnimations(0, 0, 0, R.animator.plain_300)

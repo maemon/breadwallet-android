@@ -184,12 +184,14 @@ public class TransactionListAdapter extends RecyclerView.Adapter<RecyclerView.Vi
         }
 
         boolean received = item.getSent() == 0;
-        convertView.arrowIcon.setImageResource(received ? R.drawable.arrow_down_bold_circle : R.drawable.arrow_up_bold_circle);
+       // convertView.arrowIcon.setImageResource(received ? R.drawable.arrow_down_bold_circle : R.drawable.arrow_up_bold_circle);
         convertView.mainLayout.setBackgroundResource(getResourceByPos(position));
-        convertView.sentReceived.setText(received ? mContext.getString(R.string.TransactionDetails_received, "") : mContext.getString(R.string.TransactionDetails_sent, ""));
-        convertView.toFrom.setText(received ? String.format(mContext.getString(R.string.TransactionDetails_from), "") : String.format(mContext.getString(R.string.TransactionDetails_to), ""));
-        final String addr = received ? item.getFrom()[0] : item.getTo()[0];
-        convertView.account.setText(addr);
+        convertView.sentReceived.setText(received ? mContext.getString(R.string.TransactionDetails_received, "") : mContext.getString(R.string.TransactionDetails_sent, ""));        convertView.toFrom.setText("");
+        convertView.sentReceived.setTextSize(18);
+        final String addr = "";
+
+      //  final String addr = received ? item.getFrom()[0] : item.getTo()[0];
+        convertView.account.setText("");
         int blockHeight = item.getBlockHeight();
         int confirms = blockHeight == Integer.MAX_VALUE ? 0 : BRSharedPrefs.getLastBlockHeight(mContext) - blockHeight + 1;
         int relayCount = BRPeerManager.getRelayCount(item.getTxHash());
@@ -265,6 +267,8 @@ public class TransactionListAdapter extends RecyclerView.Adapter<RecyclerView.Vi
         boolean isBTCPreferred = BRSharedPrefs.getPreferredBTC(mContext);
         String iso = isBTCPreferred ? "BTC" : BRSharedPrefs.getIso(mContext);
         convertView.amount.setText(BRCurrency.getFormattedCurrencyString(mContext, iso, BRExchange.getAmountFromSatoshis(mContext, iso, new BigDecimal(satoshisAmount))));
+        convertView.amount.setTextSize(18);
+
 
         //if it's 0 we use the current time.
         long timeStamp = item.getTimeStamp() == 0 ? System.currentTimeMillis() : item.getTimeStamp() * 1000;
@@ -324,8 +328,10 @@ public class TransactionListAdapter extends RecyclerView.Adapter<RecyclerView.Vi
                 for (TxItem item : backUpFeed) {
                     metaData = KVStoreManager.getInstance().getTxMetaData(mContext, item.getTxHash());
                     if (item.getTxHashHexReversed().toLowerCase().contains(lowerQuery)
-                            || item.getFrom()[0].toLowerCase().contains(lowerQuery)
-                            || item.getTo()[0].toLowerCase().contains(lowerQuery) ||
+                            || item.getFrom()[0].toString().contains(lowerQuery)
+                            || item.getFrom()[0].toLegacy().toLowerCase().contains(lowerQuery)
+                            || item.getTo()[0].toString().contains(lowerQuery)
+                            || item.getTo()[0].toLegacy().toLowerCase().contains(lowerQuery) ||
                             (metaData.comment != null && metaData.comment.toLowerCase().contains(lowerQuery))) {
                         if (switchesON == 0) {
                             filteredList.add(item);

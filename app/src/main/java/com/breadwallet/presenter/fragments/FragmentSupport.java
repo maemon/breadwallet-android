@@ -99,13 +99,25 @@ public class FragmentSupport extends Fragment {
             }
 
             @Override
+            public void onPageFinished(WebView view, String url) {
+                super.onPageFinished(view, url);
+                super.onPageFinished(view, url);
+                webView.loadUrl("javascript:(function() { " +
+                        "document.getElementsByTagName('header')[0].style.display=\"none\"; " +
+                        "})()");
+                webView.loadUrl("javascript:(function() { " +
+                        "document.getElementsByTagName('footer')[0].style.display=\"none\"; " +
+                        "})()");
+            }
+
+            @Override
             public void onPageStarted(WebView view, String url, Bitmap favicon) {
                 Log.d(TAG, "onPageStarted: " + url);
                 super.onPageStarted(view, url, favicon);
             }
         });
 
-        theUrl = URL_SUPPORT;
+        theUrl = "http://www.unitwallet.co/contact";
         HTTPServer.mode = HTTPServer.ServerMode.SUPPORT;
         String articleId = getArguments() == null ? null : getArguments().getString("articleId");
         if (Utils.isNullOrEmpty(theUrl)) throw new IllegalArgumentException("No url extra!");
